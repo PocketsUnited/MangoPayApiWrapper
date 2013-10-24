@@ -52,5 +52,13 @@ public abstract class AbstractDateBase extends AbstractBase {
             object.updateDate = updateDate;
             return self();
         }
+
+        public boolean hasCreationDate() {
+            return null != object.getCreationDate();
+        }
+
+        public boolean hasUpdateDate() {
+            return null != object.getUpdateDate();
+        }
     }
 }

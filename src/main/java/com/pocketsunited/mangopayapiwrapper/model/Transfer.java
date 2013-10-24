@@ -71,70 +71,130 @@ public class Transfer extends AbstractDateBase {
         }
     }
 
+    public static class TransferValidator {
+
+        boolean validate(Init init) {
+            return true;
+        }
+    }
+
+    public static final TransferValidator TRANSFER_DEFAULT_VALIDATOR = new TransferValidator();
+
+    public static final TransferValidator TRANSFER_CREATE_VALIDATOR = new TransferValidator() {
+
+        @Override
+        boolean validate(Init init) {
+            return !init.hasId() && !init.hasCreationDate() && !init.hasUpdateDate() && init.hasAmount() && (init.hasPayerId() || init.hasBeneficiaryId());
+        }
+    };
+
     static abstract class Init<T extends Init<T,U>, U extends Transfer> extends AbstractDateBase.Init<T,U> {
+
+        private TransferValidator transferValidator;
 
         protected Init(U object) {
             super(object);
         }
 
+        public T withTransferValidator(TransferValidator transferValidator) {
+            if (null != transferValidator) {
+                this.transferValidator = transferValidator;
+            }
+            else {
+                logger.warn("'transferValidator' may not be null! Discarding input, 'transferValidator' is still: {}", this.transferValidator);
+            }
+            return self();
+        }
+
         public T withPayerId(Long payerId) {
-            object.payerId = payerId;
+            if (null == payerId || 0l < payerId) {
+                object.payerId = payerId;
+            }
+            else {
+                logger.warn("'payerId' may not be less than or equals to zero! Discarding input, 'payerId' is still: {}", object.getPayerId());
+            }
             return self();
         }
 
         public T withBeneficiaryId(Long beneficiaryId) {
-            object.beneficiaryId = beneficiaryId;
+            if (null == beneficiaryId || 0l < beneficiaryId) {
+                object.beneficiaryId = beneficiaryId;
+            }
+            else {
+                logger.warn("'beneficiaryId' may not be less than or equals to zero! Discarding input, 'beneficiaryId' is still: {}", object.getBeneficiaryId());
+            }
             return self();
         }
 
         public T withPayerWalletId(Long payerWalletId) {
-            object.payerWalletId = payerWalletId;
+            if (null != payerWalletId) {
+                object.payerWalletId = payerWalletId;
+            }
+            else {
+                logger.warn("'payerWalletId' may not be null! Discarding input, 'payerWalletId' is still: {}",object.getPayerWalletId());
+            }
             return self();
         }
 
         public T withBeneficiaryWalletId(Long beneficiaryWalletId) {
-            object.beneficiaryWalletId = beneficiaryWalletId;
+            if (null != beneficiaryWalletId) {
+                object.beneficiaryWalletId = beneficiaryWalletId;
+            }
+            else {
+                logger.warn("'beneficiaryWalletId' may not be null! Discarding input, 'beneficiaryWalletId' is still: {}",object.getBeneficiaryWalletId());
+            }
             return self();
         }
 
         public T withAmount(Long amount) {
-            if (0l <= amount) {
-                object.amount = amount;
+            if (null != amount) {
+                if (0l < amount) {
+                    object.amount = amount;
+                }
+                else {
+                    logger.warn("'amount' may not be less than or equal to zero! Discarding input, 'amount' is still: {}", object.getAmount());
+                }
             }
             else {
-                logger.warn("'amount' may not be less than 0! Discarding!");
+                logger.warn("'amount' may not be null! Discarding input, 'amount' is still: {}", object.getAmount());
             }
             return self();
         }
 
         public T withClientFeeAmount(Long clientFeeAmount) {
-            if (0l <= clientFeeAmount) {
-                object.clientFeeAmount = clientFeeAmount;
+            if (null != clientFeeAmount) {
+                if (0l <= clientFeeAmount) {
+                    object.clientFeeAmount = clientFeeAmount;
+                }
+                else {
+                    logger.warn("'clientFeeAmount' may not be less than zero! Discarding input, 'clientFeeAmount is still: {}", object.getClientFeeAmount());
+                }
             }
             else {
-                logger.warn("'clientFeeAmount' may not be less than 0! Discarding!");
+                logger.warn("'clientFeeAmount may not be null! Discarding input, 'clientFeeAmount is still: {}", object.getClientFeeAmount());
             }
             return self();
         }
 
+        public boolean hasTransferValidator() {
+            return null != transferValidator;
+        }
+
+        public boolean hasAmount() {
+            return null != object.getAmount();
+        }
+
+        public boolean hasPayerId() {
+            return null != object.getPayerId();
+        }
+
+        public boolean hasBeneficiaryId() {
+            return null != object.getBeneficiaryId();
+        }
+
         @Override
         boolean validate() {
-            if (!super.validate()) {
-                return false;
-            }
-            if (null == object.amount) {
-                logger.warn("'amount' must be set!");
-                return false;
-            }
-            if (null == object.payerId && null == object.payerWalletId) {
-                logger.warn("Either 'payerId' or 'payerWalletId' must to be set!");
-                return false;
-            }
-            if (null == object.beneficiaryId && null == object.beneficiaryWalletId) {
-                logger.warn("Either 'beneficiaryId' or 'beneficiaryWalletId' must be set!");
-                return false;
-            }
-            return true;
+            return super.validate() && (null == transferValidator || transferValidator.validate(this));
         }
     }
 }

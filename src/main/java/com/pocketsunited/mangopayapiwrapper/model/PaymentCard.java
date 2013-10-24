@@ -71,10 +71,39 @@ public class PaymentCard extends AbstractBase {
         }
     }
 
+    public static class PaymentCardValidator {
+
+        boolean validate(Init init) {
+            return true;
+        }
+    }
+
+    public static final PaymentCardValidator PAYMENT_CARD_DEFAULT_VALIDATOR = new PaymentCardValidator();
+
+    public static final PaymentCardValidator PAYMENT_CARD_CREATE_VALIDATOR = new PaymentCardValidator() {
+
+        @Override
+        boolean validate(Init init) {
+            return !init.hasId() && init.hasValidOwnerId() && init.hasValidReturnUrl() && (!init.hasTemplateUrl() || init.hasValidTemplateUrl());
+        }
+    };
+
     static abstract class Init<T extends Init<T,U>, U extends PaymentCard> extends AbstractBase.Init<T,U> {
+
+        private PaymentCardValidator paymentCardValidator;
 
         Init(U object) {
             super(object);
+        }
+
+        public T withPaymentCardValidator(PaymentCardValidator paymentCardValidator) {
+            if (null != paymentCardValidator) {
+                this.paymentCardValidator = paymentCardValidator;
+            }
+            else {
+                logger.warn("'paymentCardValidator' may not be null! Discarding input, 'paymentCardValidator' is still: {}", this.paymentCardValidator);
+            }
+            return self();
         }
 
         public T withOwnerId(Long ownerId) {
@@ -105,6 +134,41 @@ public class PaymentCard extends AbstractBase {
         public T withCulture(String culture) {
             object.culture = culture;
             return self();
+        }
+
+        public boolean hasPaymentCardValidator() {
+            return null != paymentCardValidator;
+        }
+
+        public boolean hasOwnerId() {
+            return null != object.getOwnerId();
+        }
+
+        public boolean hasValidOwnerId() {
+            return hasOwnerId() && 0l < object.getOwnerId();
+        }
+
+        public boolean hasReturnUrl() {
+            return null != object.getReturnUrl() && !object.getReturnUrl().isEmpty();
+        }
+
+        public boolean hasValidReturnUrl() {
+            // TODO Implement URL sanity checks
+            return hasReturnUrl();
+        }
+
+        public boolean hasTemplateUrl() {
+            return null != object.getTemplateUrl() && !object.getTemplateUrl().isEmpty();
+        }
+
+        public boolean hasValidTemplateUrl() {
+            // TODO Implement URL sanity checks
+            return hasTemplateUrl();
+        }
+
+        @Override
+        boolean validate() {
+            return super.validate() && (null == paymentCardValidator || paymentCardValidator.validate(this));
         }
     }
 }

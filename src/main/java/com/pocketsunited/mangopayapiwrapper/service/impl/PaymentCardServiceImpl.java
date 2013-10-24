@@ -13,11 +13,22 @@ import java.util.List;
  */
 public class PaymentCardServiceImpl extends BaseServiceImpl implements IPaymentCardService {
 
-    public static final class PaymentCardListTypeReference extends TypeReference<List<PaymentCard>> {};
+    public static final class PaymentCardListTypeReference extends TypeReference<List<PaymentCard>> {}
+
+    private PaymentCard.PaymentCardValidator createValidator = PaymentCard.PAYMENT_CARD_CREATE_VALIDATOR;
 
     private String templateUrl;
 
     private String returnUrl;
+
+    public void setCreateValidator(PaymentCard.PaymentCardValidator createValidator) {
+        if (null != createValidator) {
+            this.createValidator = createValidator;
+        }
+        else {
+            logger.warn("'createValidator' may not be null!");
+        }
+    }
 
     public void setTemplateUrl(String templateUrl) {
         this.templateUrl = templateUrl;
@@ -37,49 +48,54 @@ public class PaymentCardServiceImpl extends BaseServiceImpl implements IPaymentC
 
     @Override
     public PaymentCard read(Long id) {
-        return execute("/cards/"+id,HttpMethod.GET,new TypeReference<PaymentCard>() {});
+        return execute("/cards/" + id, HttpMethod.GET, new TypeReference<PaymentCard>() {
+        });
     }
 
     @Override
-    public PaymentCard createPaymentCard(User owner) {
-        return createPaymentCard(owner.getId());
+    public PaymentCard create(User owner) {
+        return create(owner.getId());
     }
 
     @Override
-    public PaymentCard createPaymentCard(Long ownerId) {
-        return executeCreate(builder().withOwnerId(ownerId).build());
+    public PaymentCard create(Long ownerId) {
+        return executeCreate(PaymentCard.builder().withOwnerId(ownerId));
     }
 
     @Override
-    public PaymentCard createPaymentCard(User owner, String returnUrl) {
-        return createPaymentCard(owner.getId(),returnUrl);
+    public PaymentCard create(User owner, String returnUrl) {
+        return create(owner.getId(),returnUrl);
     }
 
     @Override
-    public PaymentCard createPaymentCard(Long ownerId, String returnUrl) {
-        return executeCreate(builder().withOwnerId(ownerId).withReturnUrl(returnUrl).build());
+    public PaymentCard create(Long ownerId, String returnUrl) {
+        return executeCreate(PaymentCard.builder().withOwnerId(ownerId).withReturnUrl(returnUrl));
+    }
+
+    @Override
+    public PaymentCard create(User owner, String returnUrl, String templateUrl) {
+        return create(owner.getId(),returnUrl,templateUrl);
     }
 
     @Override
     public PaymentCard create(Long ownerId, String returnUrl, String templateUrl) {
-        return executeCreate(builder().withReturnUrl(returnUrl).withOwnerId(ownerId).withTemplateUrl(templateUrl).build());
+        return executeCreate(PaymentCard.builder().withReturnUrl(returnUrl).withOwnerId(ownerId).withTemplateUrl(templateUrl));
+    }
+
+    @Override
+    public PaymentCard create(User owner, String returnUrl, String templateUrl, String culture) {
+        return create(owner.getId(),returnUrl,templateUrl,culture);
     }
 
     @Override
     public PaymentCard create(Long ownerId, String returnUrl, String templateUrl, String culture) {
-        return executeCreate(builder().withReturnUrl(returnUrl).withOwnerId(ownerId).withTemplateUrl(templateUrl).withCulture(culture).build());
+        return executeCreate(PaymentCard.builder().withReturnUrl(returnUrl).withOwnerId(ownerId).withTemplateUrl(templateUrl).withCulture(culture));
     }
 
-    //
-//    @Override
-//    public PaymentCard createPaymentCard(User owner, String cardNumber) {
-//        return createPaymentCard(owner.getId(), cardNumber);
-//    }
-//
-//    @Override
-//    public PaymentCard createPaymentCard(Long ownerId, String cardNumber) {
-//        return executeCreate(builder().withOwnerId(ownerId).withCardNumber(cardNumber).build());
-//    }
+    @Override
+    public PaymentCard create(PaymentCard.PaymentCardBuilder paymentCardBuilder) {
+        return executeCreate(paymentCardBuilder);
+    }
 
     @Override
     public List<PaymentCard> cardsByUser(User owner) {
@@ -88,18 +104,20 @@ public class PaymentCardServiceImpl extends BaseServiceImpl implements IPaymentC
 
     @Override
     public List<PaymentCard> cardsByUser(Long ownerId) {
-        return executeForList("/users/"+ownerId+"/cards",HttpMethod.GET,new PaymentCardListTypeReference());
+        return executeForList("/users/" + ownerId + "/cards", HttpMethod.GET, new PaymentCardListTypeReference());
     }
 
-    PaymentCard executeCreate(PaymentCard paymentCard) {
-        return execute("/cards",HttpMethod.POST,paymentCard,new TypeReference<PaymentCard>() {});
-    }
-
-    PaymentCard.PaymentCardBuilder builder() {
-        PaymentCard.PaymentCardBuilder paymentCardBuilder = PaymentCard.builder().withReturnUrl(returnUrl);
-        if (null != templateUrl) {
+    PaymentCard executeCreate(PaymentCard.PaymentCardBuilder paymentCardBuilder) {
+        if (!paymentCardBuilder.hasPaymentCardValidator()) {
+            paymentCardBuilder.withPaymentCardValidator(createValidator);
+        }
+        if (!paymentCardBuilder.hasValidReturnUrl()) {
+            paymentCardBuilder.withReturnUrl(returnUrl);
+        }
+        if (!paymentCardBuilder.hasValidTemplateUrl() && null != templateUrl) {
             paymentCardBuilder.withTemplateUrl(templateUrl);
         }
-        return paymentCardBuilder;
+
+        return execute("/cards",HttpMethod.POST,paymentCardBuilder.build(),new TypeReference<PaymentCard>() {});
     }
 }

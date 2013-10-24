@@ -63,10 +63,39 @@ public class Beneficiary extends AbstractDateBase {
         }
     }
 
+    public static class BeneficiaryValidator {
+
+        boolean validate(Init init) {
+            return true;
+        }
+    }
+
+    public static final BeneficiaryValidator BENEFICIARY_DEFAULT_VALIDATOR = new BeneficiaryValidator();
+
+    public static final BeneficiaryValidator BENEFICIARY_CREATE_VALIDATOR = new BeneficiaryValidator() {
+
+        @Override
+        boolean validate(Init init) {
+            return !init.hasId() && !init.hasCreationDate() && !init.hasUpdateDate() && init.hasBankAccountOwnerName() && init.hasValidBankAccountOwnerAddress() && init.hasValidBankAccountBIC() && init.hasValidBankAccountIBAN();
+        }
+    };
+
     static abstract class Init<T extends Init<T,U>, U extends Beneficiary> extends AbstractDateBase.Init<T,U> {
+
+        private BeneficiaryValidator beneficiaryValidator;
 
         Init(U object) {
             super(object);
+        }
+
+        public T withBeneficiaryValidator(BeneficiaryValidator beneficiaryValidator) {
+            if (null != beneficiaryValidator) {
+                this.beneficiaryValidator = beneficiaryValidator;
+            }
+            else {
+                logger.warn("'beneficiaryValidator' may not be null! Discarding input, 'beneficiaryValidator' is still: {}", this.beneficiaryValidator);
+            }
+            return self();
         }
 
         public T withUserId(Long userId) {
@@ -92,6 +121,54 @@ public class Beneficiary extends AbstractDateBase {
         public T withBankAccountIBAN(String bankAccountIBAN) {
             object.bankAccountIBAN = bankAccountIBAN;
             return self();
+        }
+
+        public boolean hasBeneficiaryValidator() {
+            return null != beneficiaryValidator;
+        }
+
+        public boolean hasUserId() {
+            return null != object.getUserId();
+        }
+
+        public boolean hasValidUserId() {
+            return hasUserId() && 0l < object.getUserId();
+        }
+
+        public boolean hasBankAccountOwnerName() {
+            return null != object.getBankAccountOwnerName() && !object.getBankAccountOwnerName().isEmpty();
+        }
+
+        public boolean hasBankAccountOwnerAddress() {
+            return null != object.getBankAccountOwnerAddress() && !object.getBankAccountOwnerAddress().isEmpty();
+        }
+
+        public boolean hasValidBankAccountOwnerAddress() {
+            //TODO Maybe implement some more sophisticated address checking
+            return hasBankAccountOwnerAddress();
+        }
+
+        public boolean hasBankAccountBIC() {
+            return null != object.getBankAccountBIC() && !object.getBankAccountBIC().isEmpty();
+        }
+
+        public boolean hasValidBankAccountBIC() {
+            // TODO Implement validation check for BIC
+            return hasBankAccountBIC();
+        }
+
+        public boolean hasBankAccountIBAN() {
+            return null != object.getBankAccountIBAN() && !object.getBankAccountIBAN().isEmpty();
+        }
+
+        public boolean hasValidBankAccountIBAN() {
+            // TODO Implement validation check for IBAN
+            return hasBankAccountIBAN();
+        }
+
+        @Override
+        boolean validate() {
+            return super.validate() && (null == beneficiaryValidator || beneficiaryValidator.validate(this));
         }
     }
 }

@@ -12,18 +12,19 @@ public interface IPaymentCardService {
 
     PaymentCard read(Long id);
 
-    PaymentCard createPaymentCard(User owner);
-    PaymentCard createPaymentCard(Long ownerId);
+    PaymentCard create(User owner);
+    PaymentCard create(Long ownerId);
 
-    PaymentCard createPaymentCard(User owner, String returnUrl);
-    PaymentCard createPaymentCard(Long ownerId, String returnUrl);
+    PaymentCard create(User owner, String returnUrl);
+    PaymentCard create(Long ownerId, String returnUrl);
 
+    PaymentCard create(User owner, String returnUrl, String templateUrl);
     PaymentCard create(Long ownerId, String returnUrl, String templateUrl);
 
+    PaymentCard create(User owner, String returnUrl, String templateUrl, String culture);
     PaymentCard create(Long ownerId, String returnUrl, String templateUrl, String culture);
-//
-//    PaymentCard createPaymentCard(User owner, String cardNumber);
-//    PaymentCard createPaymentCard(Long ownerId, String cardNumber);
+
+    PaymentCard create(PaymentCard.PaymentCardBuilder paymentCardBuilder);
 
     List<PaymentCard> cardsByUser(User owner);
     List<PaymentCard> cardsByUser(Long ownerId);

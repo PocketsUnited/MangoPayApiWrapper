@@ -12,8 +12,7 @@ public interface IBeneficiaryService {
 
     Beneficiary create(Long userId, String ownerName, String ownerAddress, String IBAN, String BIC);
 
-    boolean delete(Beneficiary beneficiary);
+    Beneficiary create(Beneficiary.BeneficiaryBuilder beneficiaryBuilder);
 
-    boolean delete(Long beneficiaryId);
-
+    Beneficiary read(Long id);
 }

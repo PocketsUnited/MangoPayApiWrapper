@@ -49,12 +49,12 @@ public class User extends AbstractDateBase {
     @JsonProperty(
             value = "HasRegisteredMeansOfPayment"
     )
-    Boolean hasRegisteredMeansOfPayment;
+    Boolean hasRegisteredMeansOfPayment = Boolean.FALSE;
 
     @JsonProperty(
             value = "CanRegisterMeanOfPayment"
     )
-    Boolean canRegisterMeanOfPayment;
+    Boolean canRegisterMeanOfPayment = Boolean.FALSE;
 
     @JsonProperty(
             value = "IP"
@@ -75,7 +75,7 @@ public class User extends AbstractDateBase {
     @JsonProperty(
             value = "PersonType"
     )
-    PersonType personType;
+    PersonType personType = PersonType.NATURAL_PERSON;
 
     @JsonProperty(
             value = "PersonalWalletAmount"
@@ -138,10 +138,47 @@ public class User extends AbstractDateBase {
         }
     }
 
+    public static final UserValidator USER_CREATE_VALIDATOR = new UserValidator() {
+
+        @Override
+        boolean validate(Init init) {
+            return !init.hasId() && !init.hasCreationDate() && !init.hasUpdateDate() && init.hasEmail() && init.hasValidEmail() && init.hasFirstName() && init.hasLastName() && init.hasIp() && init.hasValidIp() && init.hasBirthday() && init.hasNationality();
+        }
+    };
+
+    public static final UserValidator USER_MODIFY_VALIDATOR = new UserValidator() {
+
+        @Override
+        boolean validate(Init init) {
+            return init.hasId() && !init.hasCreationDate() && !init.hasUpdateDate() && (!init.hasEmail() || init.hasValidEmail()) && (!init.hasIp() || init.hasValidIp());
+        }
+    };
+
+    public static final UserValidator USER_DEFAULT_VALIDATOR = new UserValidator();
+
+    public static class UserValidator {
+
+        boolean validate(Init init) {
+            return true;
+        }
+    }
+
     static abstract class Init<T extends Init<T,U>, U extends User> extends AbstractDateBase.Init<T,U> {
+
+        private UserValidator userValidator;
 
         Init(U object) {
             super(object);
+        }
+
+        public T withUserValidator(UserValidator userValidator) {
+            if (null != userValidator) {
+                this.userValidator = userValidator;
+            }
+            else {
+                logger.warn("'userValidator' may not be null! Discarding input, 'userValidator is still: {}", this.userValidator);
+            }
+            return self();
         }
 
         public T withEmail(String email) {
@@ -175,13 +212,97 @@ public class User extends AbstractDateBase {
         }
 
         public T withPersonType(PersonType personType) {
-            object.personType = personType;
+            if (null != personType) {
+                object.personType = personType;
+            }
+            else {
+                logger.warn("'personType' may not be null! Discarding input, 'personType' is still: {}",object.getPersonType());
+            }
             return self();
         }
 
         public T withCanRegisterMeansOfPayment(Boolean canRegisterMeansOfPayment) {
-            object.canRegisterMeanOfPayment = canRegisterMeansOfPayment;
+            if (null != canRegisterMeansOfPayment) {
+                object.canRegisterMeanOfPayment = canRegisterMeansOfPayment;
+            }
+            else {
+                logger.warn("'canRegisterMeanOfPayment' may not be null! Discarding input, 'canRegisterMeanOfPayment' is still: {}",object.getCanRegisterMeanOfPayment());
+            }
             return self();
+        }
+
+        public T asLegalPerson() {
+            object.personType = PersonType.LEGAL_PERSONALITY;
+            return self();
+        }
+
+        public T asNaturalPerson() {
+            object.personType = PersonType.NATURAL_PERSON;
+            return self();
+        }
+
+        public boolean hasUserValidator() {
+            return null != userValidator;
+        }
+
+        public boolean hasEmail() {
+            return null != object.getEmail() && !object.getEmail().isEmpty();
+        }
+
+        public boolean hasValidEmail() {
+            // TODO Implement correct validation!
+            return hasEmail();
+        }
+
+        public boolean hasFirstName() {
+            return null != object.getFirstName() && !object.getFirstName().isEmpty();
+        }
+
+        public boolean hasLastName() {
+            return null != object.getLastName() && !object.getLastName().isEmpty();
+        }
+
+        public boolean hasBirthday() {
+            return null != object.getBirthday();
+        }
+
+        public boolean hasIp() {
+            return null != object.getIp() && !object.getIp().isEmpty();
+        }
+
+        public boolean hasValidIp() {
+            if (!hasIp()) {
+                return false;
+            }
+            String[] parts = object.getIp().split("\\.");
+            if (4 != parts.length) {
+                return false;
+            }
+            for (String part : parts) {
+                try {
+                    int intPart = Integer.valueOf(part);
+                    if (0 > intPart || 255 < intPart) {
+                        return false;
+                    }
+                }
+                catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public boolean hasNationality() {
+            return null != object.getNationality() && !object.getNationality().isEmpty();
+        }
+
+        public boolean hasPersonType() {
+            return null != object.getPersonType();
+        }
+
+        @Override
+        boolean validate() {
+            return super.validate() && (null == userValidator || userValidator.validate(this));
         }
     }
 }

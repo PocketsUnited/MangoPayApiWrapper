@@ -61,7 +61,20 @@ public abstract class AbstractBase {
             return self();
         }
 
-        public U build() {
+        public T withTag(String tag) {
+            object.tag = tag;
+            return self();
+        }
+
+        public boolean hasId() {
+            return null != object.getId();
+        }
+
+        public boolean hasTag() {
+            return null != object.getTag();
+        }
+
+        public final U build() {
             preBuild();
             if (validate()) {
                 return object;
