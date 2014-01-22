@@ -9,35 +9,35 @@ public class Withdrawal extends AbstractDateBase {
 
     @JsonProperty(
             value = "UserID")
-    private Long userId;
+    Long userId;
 
     @JsonProperty(
             value = "WalletID")
-    private Long walletId;
+    Long walletId;
 
     @JsonProperty(
             value = "Amount")
-    private Long amount;
+    Long amount;
 
     @JsonProperty(
             value = "AmountWithoutFees")
-    private Long amountWithoutFees;
+    Long amountWithoutFees;
 
     @JsonProperty(
             value = "ClientFeeAmount")
-    private Long clientFeeAmount = 0l;
+    Long clientFeeAmount = 0l;
 
     @JsonProperty(
             value = "IsCompleted")
-    private Boolean isCompleted = Boolean.FALSE;
+    Boolean isCompleted = Boolean.FALSE;
 
     @JsonProperty(
             value = "IsSucceeeded")
-    private Boolean isSucceeded = Boolean.FALSE;
+    Boolean isSucceeded = Boolean.FALSE;
 
     @JsonProperty(
             value = "BeneficiaryID")
-    private Long beneficiaryId;
+    Long beneficiaryId;
 
 
     public Long getUserId() {
